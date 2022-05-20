@@ -25,10 +25,9 @@
 #'   of a given complexity, all solutions with lower complexity are its
 #'   submodels
 #'   .
-#' @param verbose Logical; if \code{TRUE}, calculate and print additional
-#'   information about submodel relations among the unique solutions types found
-#'   in \code{sols}. Defaults to \code{FALSE}, which makes execution slightly
-#'   faster.
+#' @param verbose Logical; if \code{TRUE}, print additional
+#'   information about submodel relations among the unique solution types found
+#'   in \code{sols}. Defaults to \code{FALSE}.
 #' @param maxsols Integer determining the maximum number of unique solution
 #'   types found in \code{sols} to be included in the scoring.
 #' @param test.model Character vector that specifies a single candidate
@@ -136,6 +135,7 @@ frscored_cna <- function(x,
   out <- structure(list(rean_models = rescombXscored,
                         tested = tested,
                         verbose = scored$verbose,
+                        verbout = scored$verbout,
                         print.all = print.all,
                         fit.range = fit.range,
                         granularity = granularity,
@@ -149,7 +149,7 @@ frscored_cna <- function(x,
 
 # Print method for frscored_cna()
 #' @export
-print.frscored_cna <- function(x, verbose = x$verbose, print.all = x$print.all, maxsols = x$maxsols, ...){
+print.frscored_cna <- function(x, verbose = x$verbose, verbout = x$verbout, print.all = x$print.all, maxsols = x$maxsols, ...){
   cat('FR-scored reanalysis series with fit range', x$fit.range[1], 'to', x$fit.range[2], 'with granularity', x$granularity, '\n')
   cat('Score type:', x$scoretype, '||', 'score normalization:', x$normal, '\n')
   if(maxsols$maxsols == "ignored"){
@@ -174,12 +174,11 @@ print.frscored_cna <- function(x, verbose = x$verbose, print.all = x$print.all, 
       cat('...there were', nr, 'more scored model types, use \'print.all = TRUE\' to print all \n')
     }
   }
-  if(!is.null(verbose)){
+  if(isTRUE(verbose) & !is.null(verbose)){
     cat('\n')
     cat('Score composition: \n')
     cat('----- \n')
-
-    print(verbose)
+    print(verbout)
   }
   invisible(x)
 }

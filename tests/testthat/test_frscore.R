@@ -1,5 +1,5 @@
 
-local_edition(2)
+local_edition(3)
 
 
 
@@ -7,10 +7,10 @@ mv_all <- readRDS(testthat::test_path("frscore_mvcortest_all.RDS"))
 
 mv_res <- lapply(mv_all, '[[', 2)
 
-scores_mv <- lapply(mv_all, function(x) {test <- x[[1]]; eval(x[[3]])})
-
-test_that("Scores are correct for mv models",{
- expect_equal(scores_mv, mv_res)
+test_that("frscore works for mv",{
+ expect_snapshot(frscore(mv_all[[1]][[1]]))
+ expect_snapshot(frscore(mv_all[[2]][[1]]))
+ expect_snapshot(frscore(mv_all[[3]][[1]]))
 })
 
 
@@ -21,6 +21,11 @@ ss <- structure(c("A*c+A*D+B*C<->E", "A*c+A*D+B*C<->E", "A+B*C<->E",
                   "A*D+B*C<->E", "A*B+A*c+A*D<->E", "A*c+B*C<->E", "A*D+B*C<->E",
                   "A*B+A*c+A*D<->E", "(c*E+D*E<->A)*(A<->E)", "A<->E", "E<->A",
                   "(E<->A)*(B+C*D<->E)"), class = "character")
+
+
+test_that("frscore works for cs",{
+  expect_snapshot(frscore(ss))
+})
 
 
 syntx <- c("z1p * cUe + EUF <-> 7Lv", "fqE * BqT + yq2 <-> M\\M", "1c * bJi + Hin <-> 2x",
