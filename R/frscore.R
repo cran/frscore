@@ -49,11 +49,14 @@
 #' @importFrom rlang .data
 #' @export
 frscore <- function(sols,
+                    dat = NULL,
                     scoretype = c("full", "supermodel", "submodel"),
                     normalize = c("truemax", "idealmax", "none"),
                     maxsols = 50,
                     verbose = FALSE,
-                    print.all = FALSE){
+                    print.all = FALSE,
+                    comp.method = c("causal_submodel", "is.submodel")
+                    ){
   if (length(sols) == 0){
     warning('no solutions to test')
     return(NULL)
@@ -70,7 +73,20 @@ frscore <- function(sols,
     }
 
   scoretype <- match.arg(scoretype)
+  if(!identical(rlang::caller_call()[[1]], as.symbol("frscored_cna")) && (match.arg(scoretype) != "full")){
+    lifecycle::deprecate_warn("0.3.0",
+                              what = "frscore(scoretype)",
+                              details = "The `scoretype` argument is on its way to be removed.
+                              It is not recommended to restrict the scoring to sub- or
+                              supermodel relations only, as the scores will then not reflect
+                              the intended meaning of fit-robustness.
+                              Information about the score composition of the models
+                              can always be found by inspecting the $verbout -element
+                              of the output of `frscore()` and `frscored_cna()`.")
+  }
   normalize <- match.arg(normalize)
+  compmeth <- match.arg(comp.method)
+  compscoring <- switch(compmeth, causal_submodel = TRUE, is.submodel = FALSE)
   sols <- sols[order(sols)]
 
   mf <- as.data.frame(table(sols), stringsAsFactors = FALSE)
@@ -168,7 +184,14 @@ frscore <- function(sols,
     for (m in 1:(length(compsplit)-1)){
       subres <- sapply(1:nrow(compsplit[[m]]), function(p)
         lapply(1:nrow(compsplit[[m+1]]),
-               function(x) subAdd(compsplit[[m]][p,1], compsplit[[m+1]][x,1])))
+               function(x)
+                 if(compscoring){
+                   comptest(compsplit[[m]][p,1],
+                            compsplit[[m+1]][x,1],
+                            dat = dat)
+                   } else {
+                     subAdd(compsplit[[m]][p,1], compsplit[[m+1]][x,1])
+                   }))
       sscore[[m]] <- do.call(rbind, subres)
     }
     scs <- do.call(rbind, sscore)
@@ -207,8 +230,11 @@ frscore <- function(sols,
         nacol_rles <- rle(col(tmat)[nas])
         ids <- nas[1:nacol_rles$lengths[1]]
         chks <- lapply(ids, function(x)
-          subAdd(colnames(tmat)[col(tmat)[x]],
-                 rownames(tmat)[row(tmat)[x]]))
+          if(compscoring){comptest(colnames(tmat)[col(tmat)[x]],
+                 rownames(tmat)[row(tmat)[x]], dat = dat)} else {
+                   subAdd(colnames(tmat)[col(tmat)[x]],
+                          rownames(tmat)[row(tmat)[x]])
+                 })
 
         for(n in seq_along(chks)){
           tmat[ids[n]] <- chks[[n]][,3]
@@ -245,9 +271,9 @@ frscore <- function(sols,
 
       prescore <- prescore %>% dplyr::filter(.data$mod != .data$supmod)
       prescore <- prescore %>% dplyr::left_join(mf[,1:2], by = c("mod" = "sols")) %>%
-        dplyr::mutate(supsc = .data$Freq) %>% dplyr::select(-.data$Freq)
+        dplyr::mutate(supsc = .data$Freq) %>% dplyr::select(-"Freq")
       prescore <- prescore %>% dplyr::left_join(mf[,1:2], by = c("supmod" = "sols")) %>%
-        dplyr::mutate(subsc = .data$Freq) %>% dplyr::select(-.data$Freq)
+        dplyr::mutate(subsc = .data$Freq) %>% dplyr::select(-"Freq")
     }
 
     prescore_neg <- data.frame(mod = rownames(tmat)[row(tmat)[which(nohits)]],
@@ -338,7 +364,8 @@ frscore <- function(sols,
                         print.all = print.all,
                         scoretype = scoretype,
                         normal = normalize,
-                        maxsols = list(maxsols = maxsols, excluded = excluded_sols)
+                        maxsols = list(maxsols = maxsols, excluded = excluded_sols),
+                        comp.method = comp.method
   ), class = "frscore"))
 
 }
@@ -346,12 +373,23 @@ frscore <- function(sols,
 #' @importFrom cna is.submodel
 subAdd <- function(x, y){
   re <- is.submodel(x,y)
-  return(data.frame(names(re),
-                    attributes(re)$target,
+  return(data.frame(x,
+                    y,
                     ifelse(re[[1]] == TRUE, 1, NA),
                     checked = 1,
                     stringsAsFactors = FALSE))
 }
+
+comptest <- function(x, y, dat = NULL){
+  re <- causal_submodel(x, y, dat = dat)
+  return(data.frame(x,
+                    y,
+                    ifelse(re[[1]] == TRUE, 1, NA),
+                    checked = 1,
+                    stringsAsFactors = FALSE))
+}
+
+
 
 verbosify <- function(sc, mf, scoretype){
   bs <- sc[, c(1,3,4)]
@@ -495,7 +533,7 @@ print.frscore <- function(x,
 
   }
 
-  if(isTRUE(verbose) & !is.null(verbose)){
+  if(verbose & !is.null(verbose)){
     cat('\n')
     cat('Score composition: \n')
     cat('----- \n \n')

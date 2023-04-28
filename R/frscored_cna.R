@@ -68,19 +68,32 @@ frscored_cna <- function(x,
                          maxsols = 50,
                          test.model = NULL,
                          print.all = FALSE,
+                         comp.method = c("causal_submodel", "is.submodel"),
+                         n.init = 1000,
                          ...){
   if(!inherits(x, c("configTable", "data.frame","truthTab"))){
     stop("invalid argument x")
     }
   cl <- match.call()
   dots <- list(...)
+  if(match.arg(scoretype) != "full"){
+    lifecycle::deprecate_warn("0.3.0",
+                              what = "frscored_cna(scoretype)",
+                              details = "The `scoretype` argument is on its way to be removed.
+                              It is not recommended to restrict the scoring to sub- or
+                              supermodel relations only, as the scores will then not reflect
+                              the intended meaning of fit-robustness.
+                              Information about the score composition of the models
+                              can always be found by inspecting the $verbout -element
+                              of the output of `frscore()` and `frscored_cna()`.")
+  }
   if (any(c("cov", "con", "con.msc") %in% names(dots))){
     abort("cna arguments 'con', 'cov', 'con.msc' not meaningful")
   }
   cl$fit.range <- cl$granularity <- cl$normalize <-
     cl$verbose <- cl$scoretype <-
     cl$test.model <- cl$print.all <-
-    cl$scoretype <- cl$maxsols <- NULL
+    cl$scoretype <- cl$maxsols <- cl$comp.method <- NULL
   cl[[1]] <- as.name("rean_cna")
   if ("ncsf" %in% names(dots)){
     cl$ncsf <- dots$ncsf
@@ -99,14 +112,16 @@ frscored_cna <- function(x,
   if (is.null(test.model)){
     scored <- frscore(rescomb$condition, normalize = normalize,
                       verbose = verbose, scoretype = scoretype,
-                      maxsols = maxsols)
+                      maxsols = maxsols, comp.method = comp.method,
+                      dat = x)
     if(is.null(scored)){warning('no solutions found in reanalysis series, perhaps consider wider fit range \n \n')
       return(NULL)}
   } else {
     if(any(sapply(rescomb$condition, function(x) cna::identical.model(x, test.model)))){
       scored <- frscore(rescomb$condition, normalize = normalize,
                         verbose = verbose, scoretype = scoretype,
-                        maxsols = maxsols)
+                        maxsols = maxsols, comp.method = comp.method,
+                        dat = x)
       if(is.null(scored)){warning('no solutions found in reanalysis series, perhaps consider wider fit range \n \n')
         return(NULL)}
     } else {
@@ -142,7 +157,8 @@ frscored_cna <- function(x,
                         scoretype = scoretype,
                         normal = normalize,
                         rean.results = rescombtemp,
-                        maxsols = scored$maxsols),
+                        maxsols = scored$maxsols,
+                        comp.method = match.arg(comp.method)),
                    class = c("frscored_cna", "list"))
   return(out)
 }
@@ -216,14 +232,19 @@ print.frscored_cna <- function(x, verbose = x$verbose, verbout = x$verbout, prin
 #'   csfs.
 
 #' @export
-
+#' @importFrom lifecycle deprecated
 rean_cna <- function(x,
                      attempt = seq(1, 0.7, -0.1),
-                     ncsf = 20,
+                     ncsf = deprecated(),
                      output = c("csf", "asf"),
+                     n.init = 1000,
                      ...){
   if(!inherits(x, c("configTable", "data.frame","truthTab"))){
-    # abort(paste0("`x` should be a data frame or configuration table, not an object of type ", typeof(x)))
+    abort(paste0("`x` should be a data frame or configuration table, not an object of type ", typeof(x)))
+  }
+  if(lifecycle::is_present(ncsf)){
+    lifecycle::deprecate_warn("0.3.0", "frscore::rean_cna(ncsf = )", "frscore::rean_cna(n.init = )")
+    n.init <- ncsf
   }
   cl <- match.call()
   dots <- list(...)
@@ -231,7 +252,7 @@ rean_cna <- function(x,
     abort("cna arguments 'con', 'cov', 'con.msc' not meaningful")
   }
   output <- match.arg(output)
-  cl$attempt <- cl$asf <- cl$ncsf <- cl$csf <- cl$output <- NULL
+  cl$attempt <- cl$asf <- cl$ncsf <- cl$csf <- cl$output <- cl$n.init <- NULL
   cl[[1]] <- as.name("cna")
   cl$what <- if(output == "asf"){"a"} else {"c"}
   ccargs <- as.data.frame(expand.grid(attempt, attempt))
@@ -241,7 +262,7 @@ rean_cna <- function(x,
   for (i in 1:length(sols)){
     cl$con <- ccargs[i,"lowfirst"]
     cl$cov <- ccargs[i, "lowsec"]
-    if (output=="csf"){sols[[i]] <- cna::csf(eval.parent(cl), n.init = ncsf)}
+    if (output=="csf"){sols[[i]] <- cna::csf(eval.parent(cl), n.init = n.init)}
     if (output=="asf"){sols[[i]] <- cna::asf(eval.parent(cl))}
     dt <- data.frame(cnacon = rep(cl$con, nrow(sols[[i]])),
                      cnacov = rep(cl$cov, nrow(sols[[i]])))
@@ -249,4 +270,3 @@ rean_cna <- function(x,
   }
   return(structure(sols, class = c("rean_cna", "list")))
 }
-
