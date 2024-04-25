@@ -61,7 +61,7 @@
 frscored_cna <- function(x,
                          fit.range = c(1, 0.7),
                          granularity = 0.1,
-                         output = c("csf", "asf"),
+                         output = c("csf", "asf", "msc"),
                          scoretype = c("full", "supermodel", "submodel"),
                          normalize = c("truemax", "idealmax", "none"),
                          verbose = FALSE,
@@ -71,13 +71,15 @@ frscored_cna <- function(x,
                          comp.method = c("causal_submodel", "is.submodel"),
                          n.init = 1000,
                          ...){
+  withr::local_collate("C")
+  call <- match.call()
   if(!inherits(x, c("configTable", "data.frame","truthTab"))){
     stop("invalid argument x")
     }
   cl <- match.call()
   dots <- list(...)
   if(match.arg(scoretype) != "full"){
-    lifecycle::deprecate_warn("0.3.0",
+    lifecycle::deprecate_warn("0.3.1",
                               what = "frscored_cna(scoretype)",
                               details = "The `scoretype` argument is on its way to be removed.
                               It is not recommended to restrict the scoring to sub- or
@@ -158,7 +160,9 @@ frscored_cna <- function(x,
                         normal = normalize,
                         rean.results = rescombtemp,
                         maxsols = scored$maxsols,
-                        comp.method = match.arg(comp.method)),
+                        comp.method = match.arg(comp.method),
+                        submodel_adjacencies = scored$submodel_adjacencies,
+                        call = call),
                    class = c("frscored_cna", "list"))
   return(out)
 }
@@ -236,9 +240,10 @@ print.frscored_cna <- function(x, verbose = x$verbose, verbout = x$verbout, prin
 rean_cna <- function(x,
                      attempt = seq(1, 0.7, -0.1),
                      ncsf = deprecated(),
-                     output = c("csf", "asf"),
+                     output = c("csf", "asf", "msc"),
                      n.init = 1000,
                      ...){
+  withr::local_collate("C")
   if(!inherits(x, c("configTable", "data.frame","truthTab"))){
     abort(paste0("`x` should be a data frame or configuration table, not an object of type ", typeof(x)))
   }
@@ -255,18 +260,23 @@ rean_cna <- function(x,
   cl$attempt <- cl$asf <- cl$ncsf <- cl$csf <- cl$output <- cl$n.init <- NULL
   cl[[1]] <- as.name("cna")
   cl$what <- if(output == "asf"){"a"} else {"c"}
+  if(output == "msc"){cl$suff.only <- TRUE}
   ccargs <- as.data.frame(expand.grid(attempt, attempt))
   colnames(ccargs)<-c("lowfirst", "lowsec")
 
   sols <- vector("list", length = nrow(ccargs))
+  #cat("0/", length(sols), " reanalyses completed \r")
   for (i in 1:length(sols)){
+    cat(i-1,"/", length(sols), "reanalyses completed \r")
     cl$con <- ccargs[i,"lowfirst"]
     cl$cov <- ccargs[i, "lowsec"]
-    if (output=="csf"){sols[[i]] <- cna::csf(eval.parent(cl), n.init = n.init)}
-    if (output=="asf"){sols[[i]] <- cna::asf(eval.parent(cl))}
+    if (output == "csf"){sols[[i]] <- cna::csf(eval.parent(cl), n.init = n.init)}
+    if (output == "asf"){sols[[i]] <- cna::asf(eval.parent(cl))}
+    if (output == "msc"){sols[[i]] <- cna::msc(eval.parent(cl))}
     dt <- data.frame(cnacon = rep(cl$con, nrow(sols[[i]])),
                      cnacov = rep(cl$cov, nrow(sols[[i]])))
     sols[[i]] <- cbind(sols[[i]], dt)
   }
+  cat(length(sols),"/", length(sols), "reanalyses completed\n\n")
   return(structure(sols, class = c("rean_cna", "list")))
 }

@@ -2,7 +2,8 @@
 \alias{rean_cna}
 \title{rean_cna}
 \usage{
-rean_cna(x, attempt = seq(1, 0.7, -0.1), ncsf = deprecated(), output = c("csf", "asf"),
+rean_cna(x, attempt = seq(1, 0.7, -0.1), ncsf = deprecated(),
+output = c("csf", "asf", "msc"),
 n.init = 1000, ...)
 }
 \arguments{
@@ -15,8 +16,9 @@ in the analyses.}
 \item{ncsf}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Allowed for backward compatibility, due to be dropped in future
 versions. Please use \code{n.init} instead.}
 
-\item{output}{Character vector that determines whether csfs or asfs are
-returned; \code{"csf"} (default) returns csfs, \code{"asf"} asfs.}
+\item{output}{Character vector that determines whether csfs, asfs, or mscs are
+returned; \code{"csf"} (default) returns csfs, \code{"asf"} asfs,
+and \code{"msc"} mscs.}
 
 \item{n.init}{Integer that determines the maximum number of csfs built in
 the analyses. See \code{\link[cna:csf]{csf()}}}
