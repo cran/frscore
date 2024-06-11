@@ -1,3 +1,8 @@
+# frscore 0.4.1
+
+- A patch release that fixes an issue caused by
+changes in `cna` package.
+
 # frscore 0.4.0
 
 - `rean_cna()` and `frscore()` display progress tickers.
