@@ -7,7 +7,6 @@ frscored_cna(
   fit.range = c(1, 0.7),
   granularity = 0.1,
   output = c("csf", "asf", "msc"),
-  scoretype = c("full", "supermodel", "submodel"),
   normalize = c("truemax", "idealmax", "none"),
   verbose = FALSE,
   maxsols = 50,
@@ -15,6 +14,7 @@ frscored_cna(
   print.all = FALSE,
   comp.method = c("causal_submodel", "is.submodel"),
   n.init = 1000,
+  quiet = TRUE,
   ...
 )
 }
@@ -32,12 +32,6 @@ this value in the reanalysis series. Defaults to \code{0.1}.}
 \item{output}{String that determines whether csfs, asfs, or mscs are
 returned; \code{"csf"} (default) returns csfs, \code{"asf"} asfs,
 and \code{"msc"} mscs.}
-
-\item{scoretype}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} String specifying the scoring method: \code{"full"}
-(default; scoring is based on counting sub- and supermodel relations), \code{"supermodel"}
-(count supermodels only), \code{"submodel"} (count
-submodels only). Allowed for backward compatibility only, due to be dropped
-in next version.}
 
 \item{normalize}{String that determines the method used in
 normalizing the scores. \code{"truemax"} (default) normalizes by the highest score among the elements of \code{sols},
@@ -68,6 +62,9 @@ causal submodel relations using \code{causal_submodel()},
 \item{n.init}{Integer that determines the maximum number of csfs built in
 the analyses, see \code{\link[cna:csf]{cna::csf()}}. Only applied when \code{output = "csf"}.}
 
+\item{quiet}{Logical. When \code{TRUE}, messages and warnings from
+\code{cna} functions are suppressed when executing a reanalysis series.}
+
 \item{...}{Any arguments to be passed to \code{\link[cna:cna]{cna()}} except \code{con}, \code{cov} or
 \code{con.msc}. The effect of argument \code{what} is overriden
 by \code{output}.}
@@ -93,22 +90,6 @@ fit-robustness scores of the resulting solutions/models
 \code{frscored_cna()} is a wrapper function that sequentially executes \code{\link[frscore:rean_cna]{rean_cna()}} and \code{\link[frscore:frscore]{frscore()}}, meaning it performs both computational phases of fit-robustness scoring as introduced in Parkkinen and Baumgartner (2021). In the first phase, the function conducts a reanalysis series on the input data \code{x} at all combinatorially possible combinations of fit thresholds that can be generated from the interval given by \code{fit.range} at increments given by \code{granularity} and collects all solutions/models in a set \strong{M}. In the second phase, it calculates the fit-robustness scores of the atomic (asf) and/or complex (csf) solution formulas in \strong{M}.
 The argument \code{output} allows for controlling whether csf or only asf are built, the latter normally being  faster but less complete.
 
-The argument \code{scoretype} is deprecated as of \code{frscore} 0.3.1, and will be dropped
-from future versions of the package.
-Giving it a non-default value
-is allowed so that older code can be run without errors, but doing this is otherwise discouraged.
-The permissible values of \code{scoretype} have the following effects.
-When set to its default value \code{"full"}, the score of each solution/model \strong{m} in \strong{M} is calculated by counting
-the number of the (either causal or syntactic) sub- and supermodel relations \strong{m} has to the other elements of \strong{M}. Whether causal or syntactic submodel relations
-are counted depends on the value of \code{comp.method}: \code{"causal_submodel"} (default)
-counts causal submodel relations using \code{\link[frscore:causal_submodel]{causal_submodel()}},
-\code{"is.submodel"} counts syntactic submodel relations using \code{\link[cna:is.submodel]{cna::is.submodel()}}.
-Setting \code{scoretype} to \code{"supermodel"} or \code{"submodel"} forces the scoring to be based on, respectively, supermodel and submodel relations only. In future versions of \code{frscore}, fit-robustness
-scores will always be calculated as with \code{scoretype = "full"}, and
-changing this will not be possible. If additional information about the numbers of
-sub- vs. supermodel relations a particular model has to other models is needed, this
-can be acquired by inspecting the \code{"verbout"} element of the output of \code{frscored_cna()}.
-
 The fit-robustness scores can be normalized in two ways. In the default setting \code{normalize = "truemax"}, the score of each \code{sols[i]} is divided by the maximum score obtained by an element of \code{sols}. In case of \code{normalize = "idealmax"}, the score is normalized not by an actually obtained
 maximum but by an idealized maximum, which is calculated by assuming that all solutions of equal
 complexity in \code{sols} are identical and that for every \code{sols[i]} of a given complexity, all less complex
@@ -124,6 +105,12 @@ If the size of the consistency and coverage range scanned in the reanalysis seri
 
 If the user is interested in the robustness of one specific candidate model, that model can be given to \code{frscored_cna()} by the argument \code{test.model}. The result for that model will then be printed separately, provided the model is found in the
 reanalysis series, if not, the function stops.
+
+As executing a reanalysis series involves repeated calls to various \code{cna}
+functions, numerous warnings about the value of \code{n.init}, and messages
+about \code{asf} being returned separately, may be generated. The argument
+\code{quiet} is used to suppress or display these warnings/messages:
+the default \code{quiet = TRUE} suppresses all such warnings and messages.
 }
 \seealso{\code{\link[frscore:frscore]{frscore()}}, \code{\link[frscore:rean_cna]{rean_cna()}},
 \code{\link[frscore:causal_submodel]{causal_submodel()}}, \code{\link[cna:is.submodel]{cna::is.submodel()}}
@@ -149,7 +136,7 @@ frscored_cna(d.error, fit.range = c(1, 0.75), granularity = 0.05,
 
 # Fuzzy-set data from Emmenegger (2011)
 \donttest{frscored_cna(d.jobsecurity, type = "fs", fit.range = c(0.9, 0.6), granularity = 0.05,
-                  scoretype = "submodel", ordering = list("JSR"), strict = TRUE)}
+                  ordering = list("JSR"), strict = TRUE)}
 
 # Artificial data
 \donttest{dat <- data.frame(

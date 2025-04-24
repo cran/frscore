@@ -1,3 +1,14 @@
+# frscore 0.4.2
+
+- new functions `submodel_adjacencies_to_igraph()` and `plot_submodel_network()`  
+  for representing submodel relations as graphs, and for plotting them as networks.
+  
+- argument `scoretype` is removed from `frscore()` and `frscored_cna()`.
+
+- `rean_cna()` and `frscored_cna()` gain a new argument `quiet`.
+
+- minor internal changes for compatibility with `cna` v.4.0.0
+
 # frscore 0.4.1
 
 - A patch release that fixes an issue caused by

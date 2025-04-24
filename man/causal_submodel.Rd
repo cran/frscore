@@ -85,7 +85,7 @@ relation of direct causation that determines what is causally "upstream" and
 "downstream" of what. The exogenous factors \verb{\{A,B,D\}} are top-level upstream
 causes in \code{(A+B<->C)*(C+D<->E)}, as they are not caused by any other
 factor included in the model. Endogenous factors \code{C} and \code{E} are downstream
-of of \verb{\{A,B\}} by one and two levels respectively, and \code{E} is one level
+of \verb{\{A,B\}} by one and two levels respectively, and \code{E} is one level
 downstream of \code{D}. The chain model agrees with the direct cause model on the
 causal ordering of \verb{\{A,B,E\}} -- \code{A} and \code{B} are upstream of \code{E} and not
 causes of each other -- but also includes an additional cause of \code{E}, \code{C},
@@ -222,8 +222,8 @@ procedure, \code{causal_submodel()} is an approximation of a strictly
 speaking valid check for causal submodel relations. Since the syntactic
 manipulations and especially the minimization of the resulting expressions
 is so costly, \code{causal_submodel()} relies on the
-\code{\link[cna:rreduce]{rreduce()}} function from the \code{\link[cna:cna-package]{cna}}
-package for minimization. \code{\link[cna:rreduce]{rreduce()}} randomly chooses a
+\code{\link[cna:cna-internals]{rreduce()}} function from the \code{\link[cna:cna-package]{cna}}
+package for minimization. \code{\link[cna:cna-internals]{rreduce()}} randomly chooses a
 single reduction path to produce only one minimal form of an expression
 whenever more than one exists, i.e. when the expression is ambiguous in its
 causal claims. In the case of ambiguous models, the output of
