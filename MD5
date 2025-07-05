@@ -1,15 +1,15 @@
-4e232ca0844438181c269051906cc322 *DESCRIPTION
+ae64f171052ba39bce8108b8af56ac1d *DESCRIPTION
 2a402af21209dac91e25b9744b8d6295 *NAMESPACE
-17bc17da3aef2a2bab0961f064c30145 *NEWS.md
+77c2ffc8da0e268433452b7807fd2c48 *NEWS.md
 a7cf335ecbaabef38e86ce4071e8a4d1 *R/causal_submodel.R
 824defc833971729c51dfaa96fcc753d *R/data.R
 fa6eacbaccb8f33a6e3c8ca6b1f805f0 *R/frscore-package.R
-60f003dadf44ada7d74be39917ccd514 *R/frscore.R
+15e70fd8a12a33f9d4c687bac14a4aaf *R/frscore.R
 7110b5698add748a2d0cfb4552b17377 *R/frscored_cna.R
 83958715ff1a82548807d9fc332682d2 *R/fsubmodel.R
 e7d35194277da2f15e8737da4d14df49 *R/plot_submodel_network.R
 81d7fb6506a83d21fcef3a3780998fb7 *README.md
-f61db891eb928123aba4412ca322f508 *build/partial.rdb
+b52aabe9a2757fc86742763db9dafc9b *build/partial.rdb
 9e4bf2b31cae95001e6967a84612199c *data/d.error.rda
 35fc30e5a571384b24838855f9d226aa *inst/WORDLIST
 384e5098bd2ba26b8ebeb7aab5a4ab2f *man/causal_submodel.Rd
@@ -35,4 +35,4 @@ d125e7b298ee5c816313734d062a1855 *tests/testthat.R
 db252ff2f90b2231bbc66de7b966dc51 *tests/testthat/frscore_mvcortest_all.RDS
 0c6d027a43f3210e4ea045e2c585699b *tests/testthat/test_causal_submodel.R
 bb9c7b3ca8688af623f1993b1f762ea0 *tests/testthat/test_frscore.R
-9f74c9de1d2118069d38d89219ecd7db *tests/testthat/test_frscored_cna.R
+6a3f2652a31fc947bb899cd3f35fb162 *tests/testthat/test_frscored_cna.R
